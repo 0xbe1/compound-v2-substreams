@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package compound.types.v1;
+
+option go_package = "compound";
+
+message Token {
+  string id = 1;
+  string name = 2;
+  string symbol = 3;
+  uint64 decimals = 4;
+}
+
+message Tokens {
+  repeated Token tokens = 1;
+}
+
+message Market {
+  string id = 1;
+  string name = 2;
+  Token inputToken = 3;
+  Token outputToken = 4;
+}

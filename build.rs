@@ -4,6 +4,7 @@ fn main() -> Result<()> {
     prost_build.out_dir("./src/pb");
     prost_build.compile_protos(
         &[
+            "compound.proto",
             "ethereum.proto",
             "erc20.proto",
             "counter.proto",

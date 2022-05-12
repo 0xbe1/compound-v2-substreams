@@ -2,7 +2,9 @@ mod pb;
 mod utils;
 
 use num_bigint::BigUint;
+use pb::compound;
 use substreams::{log, proto, state};
+use utils::address_pretty;
 
 /// Say hello to every first transaction in of a transaction from a block
 ///
@@ -45,6 +47,45 @@ pub extern "C" fn map_mint(block_ptr: *mut u8, block_len: usize) {
                 return;
             }
         }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn map_tokens(block_ptr: *mut u8, block_len: usize) {
+    substreams::register_panic_hook();
+
+    let blk: pb::eth::Block = proto::decode_ptr(block_ptr, block_len).unwrap();
+    let mut tokens: Vec<compound::Token> = vec![];
+
+    for trx in blk.transaction_traces {
+        // Unitroller address
+        if hex::encode(&trx.to) != "3d9819210a31b4961b30ef54be2aed79b9c9cd3b" {
+            continue;
+        }
+        for call in trx.calls {
+            if call.state_reverted {
+                continue;
+            }
+            tokens.extend(
+                call.logs
+                .iter()
+                .filter(|log| utils::is_market_listed_event(log))
+                .map(|log| {
+                    compound::Token{
+                        id: address_pretty(&log.data[12..32]),
+                        name: "".to_string(),
+                        symbol: "".to_string(),
+                        decimals: 0,
+                    }
+                })
+            )
+        }
+    }
+
+    if tokens.len() != 0 {
+        substreams::output(compound::Tokens {
+            tokens: tokens,
+        });
     }
 }
 

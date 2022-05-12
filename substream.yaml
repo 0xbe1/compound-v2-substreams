@@ -26,6 +26,17 @@ modules:
     output:
       type: String
 
+  - name: handle_tokens
+    kind: map
+    startBlock: 7710671
+    code:
+      type: wasm/rust-v1
+      file: ./target/wasm32-unknown-unknown/release/substreams_template.wasm
+      entrypoint: map_tokens
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+    output:
+      type: proto:compound.types.v1.Tokens
 
   - name: block_to_erc_20_transfer
     kind: map

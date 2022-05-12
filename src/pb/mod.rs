@@ -1,3 +1,5 @@
+#[path = "compound.types.v1.rs"]
+pub mod compound;
 #[path = "eth.erc20.v1.rs"]
 pub mod erc20;
 
