@@ -14,6 +14,19 @@ modules:
     output:
       type: proto:sf.ethereum.type.v1.TransactionTrace
 
+  - name: handle_mint
+    kind: map
+    startBlock: 9475627
+    code:
+      type: wasm/rust-v1
+      file: ./target/wasm32-unknown-unknown/release/substreams_template.wasm
+      entrypoint: map_mint
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+    output:
+      type: String
+
+
   - name: block_to_erc_20_transfer
     kind: map
     startBlock: 14440000

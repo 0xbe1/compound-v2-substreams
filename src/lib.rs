@@ -29,6 +29,25 @@ pub extern "C" fn map_hello_world(block_ptr: *mut u8, block_len: usize) {
     }
 }
 
+#[no_mangle]
+pub extern "C" fn map_mint(block_ptr: *mut u8, block_len: usize) {
+    substreams::register_panic_hook();
+
+    let blk: pb::eth::Block = proto::decode_ptr(block_ptr, block_len).unwrap();
+
+    for trx in blk.transaction_traces {
+        for call in trx.calls {
+            for log in call.logs {
+                if !utils::is_mint_event(&log) {
+                    continue;
+                }
+                substreams::output(utils::address_pretty(trx.hash.as_slice()));
+                return;
+            }
+        }
+    }
+}
+
 /// Find and output all the ERC20 transfers
 ///
 /// `block_ptr`: Pointer of where the block is located in the wasm heap memory

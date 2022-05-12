@@ -28,6 +28,14 @@ pub fn is_erc20transfer_event(log: &pb::eth::Log) -> bool {
     return hex::encode(&log.topics[0]) == TRANSFER_TOPIC;
 }
 
+pub fn is_mint_event(log: &pb::eth::Log) -> bool {
+    if log.topics.len() != 1 || log.data.len() != 96 {
+        return false;
+    }
+    // keccak Mint(address,uint256,uint256)
+    return hex::encode(&log.topics[0]) == "4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f";
+}
+
 /// Find the erc20 storage changes (new and old valance of given holder)
 ///
 /// `call`: Call containing storage changes
