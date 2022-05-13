@@ -1,10 +1,11 @@
 mod pb;
 mod utils;
+mod rpc;
 
 use num_bigint::BigUint;
-use pb::compound;
+use pb::compound::{Token, Tokens};
 use substreams::{log, proto, state};
-use utils::address_pretty;
+use utils::{address_decode, address_pretty, decode_uint32, decode_string};
 
 /// Say hello to every first transaction in of a transaction from a block
 ///
@@ -55,7 +56,7 @@ pub extern "C" fn map_tokens(block_ptr: *mut u8, block_len: usize) {
     substreams::register_panic_hook();
 
     let blk: pb::eth::Block = proto::decode_ptr(block_ptr, block_len).unwrap();
-    let mut tokens: Vec<compound::Token> = vec![];
+    let mut tokens: Vec<Token> = vec![];
 
     for trx in blk.transaction_traces {
         // Unitroller address
@@ -71,19 +72,15 @@ pub extern "C" fn map_tokens(block_ptr: *mut u8, block_len: usize) {
                 .iter()
                 .filter(|log| utils::is_market_listed_event(log))
                 .map(|log| {
-                    compound::Token{
-                        id: address_pretty(&log.data[12..32]),
-                        name: "".to_string(),
-                        symbol: "".to_string(),
-                        decimals: 0,
-                    }
+                    let c_token = rpc::retry_rpc_calls(&address_pretty(&log.data[12..32].to_vec()));
+                    c_token
                 })
             )
         }
     }
 
     if tokens.len() != 0 {
-        substreams::output(compound::Tokens {
+        substreams::output(Tokens {
             tokens: tokens,
         });
     }
