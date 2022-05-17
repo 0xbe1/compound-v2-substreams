@@ -164,12 +164,12 @@ pub extern "C" fn map_number_of_transfers_erc_20_transfer(
     let transfers: pb::erc20::Transfers = proto::decode_ptr(transfers_ptr, transfers_len).unwrap();
 
     let counter: pb::counter::Counter = pb::counter::Counter {
-        number_of_transfers: transfers.transfers.len() as u64,
+        transfer_count: transfers.transfers.len() as u64,
     };
 
     log::println(format!(
         "Number of transfers: {}",
-        counter.number_of_transfers
+        counter.transfer_count
     ));
 
     substreams::output(counter);

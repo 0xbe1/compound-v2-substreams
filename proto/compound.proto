@@ -18,6 +18,6 @@ message Tokens {
 message Market {
   string id = 1;
   string name = 2;
-  Token inputToken = 3;
-  Token outputToken = 4;
+  Token input_token = 3;
+  Token output_token = 4;
 }

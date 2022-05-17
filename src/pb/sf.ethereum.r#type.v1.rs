@@ -249,7 +249,6 @@ pub struct TransactionReceipt {
     /// and the notion of Outcome in parity, which
     /// segregates the two concepts, which are
     /// stored in the same field
-    ///
     ///status_code can be computed based on such a
     ///hack of the `state_root` field, following
     ///EIP-658. This is optional before the
