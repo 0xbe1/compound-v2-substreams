@@ -6,9 +6,6 @@ fn main() -> Result<()> {
         &[
             "compound.proto",
             "ethereum.proto",
-            "erc20.proto",
-            "counter.proto",
-            "contract.proto",
         ],
         &["./proto"],
     )
