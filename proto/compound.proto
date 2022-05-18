@@ -17,3 +17,13 @@ message Market {
   string input_token_address = 3;
   string output_token_address = 4;
 }
+
+message Deposit {
+  string id = 1;
+  string hash = 2;
+  uint64 log_index = 3;
+  string from = 4;
+  string to = 5;
+  string amount = 6;
+  string amount_usd = 7;
+}

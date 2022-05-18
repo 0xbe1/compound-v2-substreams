@@ -14,17 +14,17 @@ modules:
     output:
       type: proto:sf.ethereum.type.v1.TransactionTrace
 
-  - name: handle_mint
-    kind: map
-    startBlock: 9475627
+  - name: store_mint
+    kind: store
+    updatePolicy: replace
+    valueType: proto:compound.types.v1.Deposit
+    startBlock: 7710671
     code:
       type: wasm/rust-v1
       file: ./target/wasm32-unknown-unknown/release/substreams_template.wasm
-      entrypoint: map_mint
+      entrypoint: store_mint
     inputs:
       - source: sf.ethereum.type.v1.Block
-    output:
-      type: String
 
   - name: store_tokens
     kind: store
