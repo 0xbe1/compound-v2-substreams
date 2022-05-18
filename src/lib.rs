@@ -3,7 +3,7 @@ mod utils;
 mod rpc;
 
 use num_bigint::BigUint;
-use pb::compound::{Token, Tokens};
+use pb::compound::Token;
 use substreams::{log, proto, state};
 use utils::{address_decode, address_pretty, decode_uint32, decode_string};
 
@@ -52,11 +52,11 @@ pub extern "C" fn map_mint(block_ptr: *mut u8, block_len: usize) {
 }
 
 #[no_mangle]
-pub extern "C" fn map_tokens(block_ptr: *mut u8, block_len: usize) {
+pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
     substreams::register_panic_hook();
 
     let blk: pb::eth::Block = proto::decode_ptr(block_ptr, block_len).unwrap();
-    let mut tokens: Vec<Token> = vec![];
+    // let mut tokens: Vec<Token> = vec![];
 
     for trx in blk.transaction_traces {
         // Unitroller address
@@ -67,23 +67,17 @@ pub extern "C" fn map_tokens(block_ptr: *mut u8, block_len: usize) {
             if call.state_reverted {
                 continue;
             }
-            tokens.extend(
-                call.logs
+
+            call.logs
                 .iter()
                 .filter(|log| utils::is_market_listed_event(log))
-                .map(|log| {
+                .for_each(|log| {
                     let addr = &address_pretty(&log.data[12..32].to_vec());
                     let c_token = rpc::retry_rpc_calls(addr);
-                    c_token
-                })
-            )
+                    // c_token
+                    state::set_if_not_exists(1, format!("token:{}", addr), &proto::encode(&c_token).unwrap());
+                });
         }
-    }
-
-    if tokens.len() != 0 {
-        substreams::output(Tokens {
-            tokens: tokens,
-        });
     }
 }
 
