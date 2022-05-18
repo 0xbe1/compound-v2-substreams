@@ -3,7 +3,7 @@ mod rpc;
 mod utils;
 
 use num_bigint::BigUint;
-use pb::compound::Token;
+use pb::compound::{Market, Token};
 use substreams::{log, proto, state};
 use utils::{address_decode, address_pretty, decode_string, decode_uint32};
 
@@ -56,7 +56,6 @@ pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
     substreams::register_panic_hook();
 
     let blk: pb::eth::Block = proto::decode_ptr(block_ptr, block_len).unwrap();
-    // let mut tokens: Vec<Token> = vec![];
 
     for trx in blk.transaction_traces {
         // Unitroller address
@@ -74,7 +73,6 @@ pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
                 .for_each(|log| {
                     let addr = &address_pretty(&log.data[12..32].to_vec());
                     let c_token = rpc::retry_rpc_calls(addr);
-                    // c_token
                     state::set_if_not_exists(
                         1,
                         format!("token:{}", addr),
