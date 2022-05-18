@@ -38,6 +38,18 @@ modules:
     inputs:
       - source: sf.ethereum.type.v1.Block
 
+  - name: store_market
+    kind: store
+    updatePolicy: replace
+    valueType: proto:compound.types.v1.Market
+    startBlock: 7710671
+    code:
+      type: wasm/rust-v1
+      file: ./target/wasm32-unknown-unknown/release/substreams_template.wasm
+      entrypoint: store_market
+    inputs:
+      - source: sf.ethereum.type.v1.Block
+
   - name: block_to_erc_20_transfer
     kind: map
     startBlock: 14440000
