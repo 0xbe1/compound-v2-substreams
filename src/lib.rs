@@ -1,3 +1,4 @@
+mod event;
 mod pb;
 mod rpc;
 mod utils;
@@ -15,7 +16,7 @@ pub extern "C" fn map_mint(block_ptr: *mut u8, block_len: usize) {
     for trx in blk.transaction_traces {
         for call in trx.calls {
             for log in call.logs {
-                if !utils::is_mint_event(&log) {
+                if !event::is_mint_event(&log) {
                     continue;
                 }
                 substreams::output(utils::address_pretty(trx.hash.as_slice()));
@@ -43,7 +44,7 @@ pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
 
             call.logs
                 .iter()
-                .filter(|log| utils::is_market_listed_event(log))
+                .filter(|log| event::is_market_listed_event(log))
                 .for_each(|log| {
                     let addr = &address_pretty(&log.data[12..32].to_vec());
                     let c_token = rpc::retry_rpc_calls(addr);
@@ -77,7 +78,7 @@ pub extern "C" fn store_market(block_ptr: *mut u8, block_len: usize) {
 
             call.logs
                 .iter()
-                .filter(|log| utils::is_market_listed_event(log))
+                .filter(|log| event::is_market_listed_event(log))
                 .for_each(|log| {
                     let addr = &address_pretty(&log.data[12..32].to_vec());
                     // TODO: can i save this call?
@@ -97,4 +98,3 @@ pub extern "C" fn store_market(block_ptr: *mut u8, block_len: usize) {
         }
     }
 }
-
