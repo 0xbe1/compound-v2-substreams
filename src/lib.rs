@@ -1,11 +1,11 @@
 mod pb;
-mod utils;
 mod rpc;
+mod utils;
 
 use num_bigint::BigUint;
 use pb::compound::Token;
 use substreams::{log, proto, state};
-use utils::{address_decode, address_pretty, decode_uint32, decode_string};
+use utils::{address_decode, address_pretty, decode_string, decode_uint32};
 
 /// Say hello to every first transaction in of a transaction from a block
 ///
@@ -75,7 +75,11 @@ pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
                     let addr = &address_pretty(&log.data[12..32].to_vec());
                     let c_token = rpc::retry_rpc_calls(addr);
                     // c_token
-                    state::set_if_not_exists(1, format!("token:{}", addr), &proto::encode(&c_token).unwrap());
+                    state::set_if_not_exists(
+                        1,
+                        format!("token:{}", addr),
+                        &proto::encode(&c_token).unwrap(),
+                    );
                 });
         }
     }
@@ -162,10 +166,7 @@ pub extern "C" fn map_number_of_transfers_erc_20_transfer(
         transfer_count: transfers.transfers.len() as u64,
     };
 
-    log::println(format!(
-        "Number of transfers: {}",
-        counter.transfer_count
-    ));
+    log::println(format!("Number of transfers: {}", counter.transfer_count));
 
     substreams::output(counter);
 }

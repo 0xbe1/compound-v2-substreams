@@ -35,11 +35,18 @@ pub fn decode_string(input: &[u8]) -> String {
         panic!("invalid input, first part should be 32");
     };
 
-    let size : usize = decode_uint32(&input[32..64]) as usize;
+    let size: usize = decode_uint32(&input[32..64]) as usize;
     let end: usize = (size) + 64;
 
     if end > input.len() {
-        panic!("invalid input: end {:?}, length: {:?}, next: {:?}, size: {:?}, whole: {:?}", end, input.len(), next, size, hex::encode(&input[32..64]));
+        panic!(
+            "invalid input: end {:?}, length: {:?}, next: {:?}, size: {:?}, whole: {:?}",
+            end,
+            input.len(),
+            next,
+            size,
+            hex::encode(&input[32..64])
+        );
     }
 
     String::from_utf8_lossy(&input[64..end]).to_string()
@@ -62,7 +69,8 @@ pub fn is_mint_event(log: &pb::eth::Log) -> bool {
         return false;
     }
     // keccak Mint(address,uint256,uint256)
-    return hex::encode(&log.topics[0]) == "4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f";
+    return hex::encode(&log.topics[0])
+        == "4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f";
 }
 
 pub fn is_market_listed_event(log: &pb::eth::Log) -> bool {
@@ -70,7 +78,8 @@ pub fn is_market_listed_event(log: &pb::eth::Log) -> bool {
         return false;
     }
     // keccak MarketListed(address)
-    return hex::encode(&log.topics[0]) == "cf583bb0c569eb967f806b11601c4cb93c10310485c67add5f8362c2f212321f";
+    return hex::encode(&log.topics[0])
+        == "cf583bb0c569eb967f806b11601c4cb93c10310485c67add5f8362c2f212321f";
 }
 
 /// Find the erc20 storage changes (new and old valance of given holder)
