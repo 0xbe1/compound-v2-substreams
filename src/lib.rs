@@ -72,7 +72,8 @@ pub extern "C" fn map_tokens(block_ptr: *mut u8, block_len: usize) {
                 .iter()
                 .filter(|log| utils::is_market_listed_event(log))
                 .map(|log| {
-                    let c_token = rpc::retry_rpc_calls(&address_pretty(&log.data[12..32].to_vec()));
+                    let addr = &address_pretty(&log.data[12..32].to_vec());
+                    let c_token = rpc::retry_rpc_calls(addr);
                     c_token
                 })
             )
