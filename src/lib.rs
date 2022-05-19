@@ -6,7 +6,7 @@ mod utils;
 use num_bigint::BigUint;
 use pb::compound::{Deposit, Market, Token};
 use substreams::{proto, state};
-use utils::{address_decode, address_pretty, decode_string, decode_uint32};
+use utils::{address_pretty, decode_string, decode_uint32};
 
 #[no_mangle]
 pub extern "C" fn store_mint(block_ptr: *mut u8, block_len: usize) {
@@ -64,11 +64,12 @@ pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
                 .iter()
                 .filter(|log| event::is_market_listed_event(log))
                 .for_each(|log| {
-                    let addr = &address_pretty(&log.data[12..32].to_vec());
-                    let c_token = rpc::retry_rpc_calls(addr);
+                    let addr = &log.data[12..32];
+                    // let addr = &address_pretty(&log.data[12..32].to_vec());
+                    let c_token = rpc::fetch_token(&addr.to_vec());
                     state::set_if_not_exists(
                         1,
-                        format!("token:{}", addr),
+                        format!("token:{}", address_pretty(addr)),
                         &proto::encode(&c_token).unwrap(),
                     );
                 });
@@ -98,14 +99,15 @@ pub extern "C" fn store_market(block_ptr: *mut u8, block_len: usize) {
                 .iter()
                 .filter(|log| event::is_market_listed_event(log))
                 .for_each(|log| {
-                    let addr = &address_pretty(&log.data[12..32].to_vec());
+                    let addr = &log.data[12..32];
+                    // let addr = &address_pretty(&log.data[12..32].to_vec());
                     // TODO: can i save this call?
-                    let c_token = rpc::retry_rpc_calls(addr);
+                    let c_token = rpc::fetch_token(&addr.to_vec());
                     let market = Market {
-                        id: addr.to_string(),
+                        id: address_pretty(addr),
                         name: c_token.name,
                         input_token_address: "todo".to_string(),
-                        output_token_address: addr.to_string(),
+                        output_token_address: address_pretty(addr),
                     };
                     state::set_if_not_exists(
                         1,
