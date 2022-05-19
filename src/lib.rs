@@ -6,7 +6,7 @@ mod utils;
 use num_bigint::BigUint;
 use pb::compound::{Deposit, Market, Token};
 use substreams::{proto, state};
-use utils::{address_pretty, decode_string, decode_uint32};
+use utils::{address_decode, address_pretty, decode_string, decode_uint32};
 
 #[no_mangle]
 pub extern "C" fn store_mint(block_ptr: *mut u8, block_len: usize) {
@@ -64,13 +64,43 @@ pub extern "C" fn store_tokens(block_ptr: *mut u8, block_len: usize) {
                 .iter()
                 .filter(|log| event::is_market_listed_event(log))
                 .for_each(|log| {
-                    let addr = &log.data[12..32];
-                    // let addr = &address_pretty(&log.data[12..32].to_vec());
-                    let c_token = rpc::fetch_token(&addr.to_vec());
+                    let c_token_addr = &log.data[12..32];
+                    let c_token = rpc::fetch_token(&c_token_addr.to_vec());
+                    let underlying_token = if hex::encode(&c_token_addr)
+                        == "4ddc2d193948926d02f9b1fe9e1daa0718270ed5"
+                    {
+                        // cETH
+                        Token {
+                            id: "0x0000000000000000000000000000000000000000".to_string(),
+                            name: "Ether".to_string(),
+                            symbol: "ETH".to_string(),
+                            decimals: 18,
+                        }
+                    } else {
+                        let underlying_token_addr = rpc::fetch_underlying(&c_token_addr.to_vec());
+                        if hex::encode(&underlying_token_addr)
+                            == "89d24a6b4ccb1b6faa2625fe562bdd9a23260359"
+                        {
+                            // SAI
+                            Token {
+                                id: "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359".to_string(),
+                                name: "Dai Stablecoin v1.0 (DAI)".to_string(),
+                                symbol: "DAI".to_string(),
+                                decimals: 18,
+                            }
+                        } else {
+                            rpc::fetch_token(&underlying_token_addr)
+                        }
+                    };
                     state::set_if_not_exists(
                         1,
-                        format!("token:{}", address_pretty(addr)),
+                        format!("token:{}", address_pretty(c_token_addr)),
                         &proto::encode(&c_token).unwrap(),
+                    );
+                    state::set_if_not_exists(
+                        1,
+                        format!("token:{}", underlying_token.id),
+                        &proto::encode(&underlying_token).unwrap(),
                     );
                 });
         }
@@ -99,15 +129,22 @@ pub extern "C" fn store_market(block_ptr: *mut u8, block_len: usize) {
                 .iter()
                 .filter(|log| event::is_market_listed_event(log))
                 .for_each(|log| {
-                    let addr = &log.data[12..32];
-                    // let addr = &address_pretty(&log.data[12..32].to_vec());
-                    // TODO: can i save this call?
-                    let c_token = rpc::fetch_token(&addr.to_vec());
+                    let c_token_addr = &log.data[12..32];
+                    let c_token = rpc::fetch_token(&c_token_addr.to_vec());
+                    let input_token_address = if hex::encode(&c_token_addr)
+                        == "4ddc2d193948926d02f9b1fe9e1daa0718270ed5"
+                    {
+                        // cETH
+                        "0x0000000000000000000000000000000000000000".to_string()
+                    } else {
+                        let underlying_token_addr = rpc::fetch_underlying(&c_token_addr.to_vec());
+                        format!("0x{}", hex::encode(underlying_token_addr))
+                    };
                     let market = Market {
-                        id: address_pretty(addr),
+                        id: address_pretty(c_token_addr),
                         name: c_token.name,
-                        input_token_address: "todo".to_string(),
-                        output_token_address: address_pretty(addr),
+                        input_token_address,
+                        output_token_address: address_pretty(c_token_addr),
                     };
                     state::set_if_not_exists(
                         1,

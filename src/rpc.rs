@@ -36,12 +36,12 @@ pub fn fetch_token(addr: &Vec<u8>) -> Token {
     };
 
     if rpc_responses_unmarshalled.responses[0].raw.len() != 32
-        || rpc_responses_unmarshalled.responses[1].raw.len() != 96
-        || rpc_responses_unmarshalled.responses[2].raw.len() != 96
+        || rpc_responses_unmarshalled.responses[1].raw.len() < 96
+        || rpc_responses_unmarshalled.responses[2].raw.len() < 96
     {
         panic!(
             "not a token because response length: {}",
-            address_pretty(addr)
+            address_pretty(addr),
         )
     };
 
@@ -55,4 +55,31 @@ pub fn fetch_token(addr: &Vec<u8>) -> Token {
         symbol: decoded_symbol,
         decimals: decoded_decimals as u64,
     }
+}
+
+pub fn fetch_underlying(addr: &Vec<u8>) -> Vec<u8> {
+    let underlying = hex::decode("6f307dc3").unwrap();
+    let rpc_calls = substreams::pb::eth::RpcCalls {
+        calls: vec![substreams::pb::eth::RpcCall {
+            to_addr: Vec::from(addr.clone()),
+            method_signature: underlying,
+        }],
+    };
+
+    let rpc_responses_marshalled: Vec<u8> =
+        substreams::rpc::eth_call(substreams::proto::encode(&rpc_calls).unwrap());
+    let rpc_responses_unmarshalled: substreams::pb::eth::RpcResponses =
+        substreams::proto::decode(&rpc_responses_marshalled).unwrap();
+
+    if rpc_responses_unmarshalled.responses[0].failed {
+        panic!("not a token because of a failure: {}", address_pretty(addr))
+    };
+
+    if rpc_responses_unmarshalled.responses[0].raw.len() != 32 {
+        panic!(
+            "not a token because response length: {}",
+            address_pretty(addr)
+        )
+    };
+    return rpc_responses_unmarshalled.responses[0].raw[12..32].to_vec();
 }
