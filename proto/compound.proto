@@ -27,3 +27,9 @@ message Deposit {
   string amount = 6;
   string amount_usd = 7;
 }
+
+message Event {
+  oneof type {
+    Deposit deposit = 1;
+  }
+}

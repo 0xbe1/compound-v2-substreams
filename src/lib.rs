@@ -3,13 +3,14 @@ mod pb;
 mod rpc;
 mod utils;
 
+use crate::pb::compound::event::Type::Deposit as DepositType;
 use num_bigint::BigUint;
-use pb::compound::{Deposit, Market, Token};
+use pb::compound::{Deposit, Event, Market, Token};
 use substreams::{proto, state};
 use utils::{address_decode, address_pretty, decode_string, decode_uint32};
 
 #[no_mangle]
-pub extern "C" fn store_mint(block_ptr: *mut u8, block_len: usize) {
+pub extern "C" fn store_event(block_ptr: *mut u8, block_len: usize) {
     substreams::register_panic_hook();
 
     let blk: pb::eth::Block = proto::decode_ptr(block_ptr, block_len).unwrap();
@@ -25,8 +26,9 @@ pub extern "C" fn store_mint(block_ptr: *mut u8, block_len: usize) {
                 let log_index = log.index as u64;
                 let mint_event = event::new_mint_event(log);
 
+                let event_id = format!("{}-{}", address_pretty(&trx.hash), log_index);
                 let deposit = Deposit {
-                    id: format!("{}-{}", address_pretty(&trx.hash), log_index),
+                    id: event_id.clone(),
                     hash: address_pretty(&trx.hash),
                     log_index,
                     from: address_pretty(&mint_event.minter),
@@ -34,10 +36,14 @@ pub extern "C" fn store_mint(block_ptr: *mut u8, block_len: usize) {
                     amount: BigUint::from_bytes_be(&mint_event.mint_amount).to_string(),
                     amount_usd: "todo".to_string(),
                 };
+                let event = Event {
+                    r#type: Some(DepositType(deposit)),
+                };
+
                 state::set(
                     1,
-                    format!("deposit:{}", deposit.id.clone()),
-                    &proto::encode(&deposit).unwrap(),
+                    format!("event:deposit:{}", event_id.clone()),
+                    &proto::encode(&event).unwrap(),
                 );
             }
         }

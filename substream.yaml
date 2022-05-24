@@ -2,15 +2,15 @@ specVersion: 0.1.0
 description: Your substream(s) description here
 
 modules:
-  - name: store_mint
+  - name: store_event
     kind: store
     updatePolicy: replace
-    valueType: proto:compound.types.v1.Deposit
+    valueType: proto:compound.types.v1.Event
     startBlock: 7710671
     code:
       type: wasm/rust-v1
       file: ./target/wasm32-unknown-unknown/release/substreams_template.wasm
-      entrypoint: store_mint
+      entrypoint: store_event
     inputs:
       - source: sf.ethereum.type.v1.Block
 

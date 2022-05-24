@@ -37,3 +37,16 @@ pub struct Deposit {
     #[prost(string, tag = "7")]
     pub amount_usd: ::prost::alloc::string::String,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Event {
+    #[prost(oneof = "event::Type", tags = "1")]
+    pub r#type: ::core::option::Option<event::Type>,
+}
+/// Nested message and enum types in `Event`.
+pub mod event {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Type {
+        #[prost(message, tag = "1")]
+        Deposit(super::Deposit),
+    }
+}
